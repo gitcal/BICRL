@@ -7,7 +7,7 @@ from scipy.stats import bernoulli
 import plot_grid
 
 class BIRL:
-    def __init__(self, env, demos, beta, env_orig, prop_constr=None, prop_rew=None, num_cnstr=0, epsilon=0.0001):
+    def __init__(self, env, demos, beta, env_orig, num_cnstr=0, epsilon=0.0001):
 
         """
         Class for running and storing output of mcmc for Bayesian IRL
@@ -23,13 +23,12 @@ class BIRL:
         self.num_cnstr = num_cnstr
         self.env_orig = env_orig
         self.posterior = {new_list: [] for new_list in range(env.num_states)}
-        self.prop_constr = prop_constr
-        self.prop_rew = prop_rew
         #check to see if FeatureMDP or just plain MDP
         if hasattr(self.env, 'feature_weights'):
             self.num_mcmc_dims = len(self.env.feature_weights)
         else:
             self.num_mcmc_dims = self.env.num_states
+        np.random.seed(10)
 
         
 
@@ -50,6 +49,38 @@ class BIRL:
                 log_sum += self.beta * q_values[s][a] - logsumexp(Z_exponents)
                
         return log_sum
+
+
+
+    def generate_proposal_bern_constr(self, old_constr, old_rew_mean, step_size):
+        new_constr = copy.deepcopy(old_constr)
+        new_rew_mean = copy.deepcopy(old_rew_mean)
+        index = np.random.randint(len(old_constr))
+        new_constr[index] = 1 if old_constr[index]==0 else 0
+
+        new_rew_mean = new_rew_mean - 1 if np.random.rand() < 0.5 else new_rew_mean + 1
+        new_rew = np.random.normal(new_rew_mean, 1)
+        
+        return new_constr, new_rew, new_rew_mean
+
+
+    def generate_proposal_bern_constr_alternating(self, old_constr, old_rew, step_size, ind = 0, stdev = 1):
+        new_constr = copy.deepcopy(old_constr)
+        new_rew = copy.deepcopy(old_rew)
+        if ind % 50 == 0:   
+            new_rew = new_rew + stdev * np.random.randn() 
+            index = None     
+        else:
+            index = np.random.randint(len(old_constr))
+            new_constr[index] = 1 if old_constr[index]==0 else 0
+            
+        
+        
+        # new_rew_mean = new_rew_mean - 1 if np.random.rand() < 0.5 else new_rew_mean + 1
+        # new_rew = np.random.normal(new_rew_mean, 1)
+        
+        return new_constr, new_rew, index
+
 
     def compute_variance(self, prob=None, thresh=0.1):
 
@@ -102,36 +133,6 @@ class BIRL:
 
     
         return state_query
-
-
-    def generate_proposal_bern_constr(self, old_constr, old_rew_mean, step_size):
-        new_constr = copy.deepcopy(old_constr)
-        new_rew_mean = copy.deepcopy(old_rew_mean)
-        index = np.random.randint(len(old_constr))
-        new_constr[index] = 1 if old_constr[index]==0 else 0
-
-        new_rew_mean = new_rew_mean - 1 if np.random.rand() < 0.5 else new_rew_mean + 1
-        new_rew = np.random.normal(new_rew_mean, 1)
-        
-        return new_constr, new_rew, new_rew_mean
-
-
-    def generate_proposal_bern_constr_alternating(self, old_constr, old_rew, step_size, ind = 0, stdev = 1):
-        new_constr = copy.deepcopy(old_constr)
-        new_rew = copy.deepcopy(old_rew)
-        if ind % 50 == 0:   
-            new_rew = new_rew + stdev * np.random.randn() 
-            index = None     
-        else:
-            index = np.random.randint(len(old_constr))
-            new_constr[index] = 1 if old_constr[index]==0 else 0
-            
-        
-        
-        # new_rew_mean = new_rew_mean - 1 if np.random.rand() < 0.5 else new_rew_mean + 1
-        # new_rew = np.random.normal(new_rew_mean, 1)
-        
-        return new_constr, new_rew, index
                 
 
 
@@ -162,19 +163,16 @@ class BIRL:
         self.chain_cnstr = np.zeros((num_samples, self.num_mcmc_dims)) #store rewards found via BIRL here, preallocate for speed
         self.chain_rew = np.zeros(num_samples)
         # cur_sol = self.initial_solution_bern_cnstr() #initial guess for MCMC
-        # cur_constr, cur_rew = self.initial_solution_bern_cnstr()
-        # cur_rew_mean = cur_rew
-        # # print(cur_prob)
-        # cur_sol = copy.deepcopy(rewards_fix)
-        # for i in range(len(cur_constr)):
-        #         if cur_constr[i] == 1:
-        #             cur_sol[i] = cur_rew
+        cur_constr, cur_rew = self.initial_solution_bern_cnstr()
+        cur_rew_mean = cur_rew
+        # print(cur_prob)
         cur_sol = copy.deepcopy(rewards_fix)
-        cur_constr = self.prop_constr
-        cur_rew = self.prop_rew
         for i in range(len(cur_constr)):
-            if cur_constr[i] == 1:
-                cur_sol[i] = cur_rew
+                if cur_constr[i] == 1:
+                    cur_sol[i] = cur_rew
+
+
+
         
         map_constr = cur_constr
         cur_ll = self.calc_ll(cur_sol)  # log likelihood
@@ -188,8 +186,8 @@ class BIRL:
             # prop_constr, prop_rew, prop_rew_sample = self.generate_proposal_bern_constr2(cur_constr, cur_rew, stepsize, normalize, i)
             prop_constr, prop_rew, index = self.generate_proposal_bern_constr_alternating(cur_constr, cur_rew, stepsize, i, 1)
             # prop_constr, prop_rew, prop_rew_mean = self.generate_proposal_bern_constr(cur_constr, cur_rew_mean, stepsize)
-            self.prop_constr = prop_constr
-            self.prop_rew = prop_rew
+
+            # IPython.embed()
             prop_sol = copy.deepcopy(rewards_fix)
             for ii in range(len(prop_constr)):
                 if prop_constr[ii] == 1:
@@ -204,6 +202,8 @@ class BIRL:
                 # accept
                 # IPython.embed()
                 self.chain_cnstr[i,np.nonzero(prop_constr)] = 1
+                if index != None:
+                    self.posterior[index].append(prop_constr[index]) 
                 self.chain_rew[i] = prop_rew
                 accept_cnt += 1
                 cur_constr = prop_constr
@@ -222,6 +222,8 @@ class BIRL:
                 if np.random.rand() < np.exp(prop_ll - cur_ll):
                     self.chain_cnstr[i,np.nonzero(prop_constr)] = 1
                     self.chain_rew[i] = prop_rew
+                    if index != None:
+                        self.posterior[index].append(prop_constr[index]) 
                     accept_cnt += 1
                     # cur_sol = prop_sol
                     cur_constr = prop_constr
@@ -232,6 +234,8 @@ class BIRL:
                 else:
                     # reject
                     self.chain_cnstr[i,np.nonzero(cur_constr)] = 1
+                    if index != None:
+                        self.posterior[index].append(1-prop_constr[index]) 
                     self.chain_rew[i] = cur_rew
             # if i ==200 or i==num_samples-1:
             #     plot_grid.plot_grid(8, 6, self.env.state_grid_map, i, map_sol)
@@ -242,7 +246,7 @@ class BIRL:
         print("accept rate:", accept_cnt / num_samples)
         self.accept_rate = accept_cnt / num_samples
         self.map_sol = map_sol
-        # self.map_rew = map_rew
+        self.map_rew = map_rew
         self.map_list = map_list
         self.Perf_list = Perf_list
         # print("MAP Loglikelihood", map_ll)
@@ -253,7 +257,7 @@ class BIRL:
         
 
     def get_map_solution(self):
-        return self.map_sol#, self.map_rew
+        return self.map_sol, self.map_rew
 
 
     def get_mean_solution(self, burn_frac=0.1, skip_rate=1):
