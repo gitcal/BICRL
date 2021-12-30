@@ -197,7 +197,7 @@ class BIRL:
             # print(prop_sol)
             # calculate likelihood ratio test
             prop_ll = self.calc_ll(prop_sol)
-            # print(i,cur_ll,prop_ll)
+            print(i,cur_ll,prop_ll)
             if prop_ll > cur_ll:
                 # accept
                 # IPython.embed()
@@ -237,11 +237,14 @@ class BIRL:
                     if index != None:
                         self.posterior[index].append(1-prop_constr[index]) 
                     self.chain_rew[i] = cur_rew
-            # if i ==200 or i==num_samples-1:
-            #     plot_grid.plot_grid(8, 6, self.env.state_grid_map, i, map_sol)
-            #     plot_grid_mean_constr(nx, ny, env2.state_grid_map, kk, constraints, mean_constraints, trajectory_demos, optimal_policy)
-            TPR, FPR, FNR = FP_and_FN_and_TP(self.env_orig.constraints, map_constr)
-            Perf_list.append((i,TPR,FPR,FNR))
+            if i%201==0 or i==num_samples-1:
+                # plot_grid.plot_grid(8, 6, self.env.state_grid_map, i, map_sol)
+                # IPython.embed()
+                mean_constraints = np.mean(self.chain_cnstr[i-100:i,:],axis=0)
+                name = 'single_mean_cnstr_'
+                plot_grid.plot_grid_mean_constr(self.env.num_rows, self.env.num_rows, self.env.state_grid_map, i, name, self.env.constraints, mean_constraints)#, trajectory_demos, optimal_policy)
+            # TPR, FPR, FNR = FP_and_FN_and_TP(self.env_orig.constraints, map_constr)
+            # Perf_list.append((i,TPR,FPR,FNR))
 
         print("accept rate:", accept_cnt / num_samples)
         self.accept_rate = accept_cnt / num_samples
