@@ -146,7 +146,7 @@ class BIRL:
 
   
         
-    def run_mcmc_bern_constraint(self, samples, stepsize, rewards_fix, normalize=True):
+    def run_mcmc_bern_constraint(self, samples, stepsize, N_demos, rewards_fix, normalize=True):
         '''
             run metropolis hastings MCMC with Gaussian symmetric proposal and uniform prior
             samples: how many reward functions to sample from posterior
@@ -237,11 +237,12 @@ class BIRL:
                     if index != None:
                         self.posterior[index].append(1-prop_constr[index]) 
                     self.chain_rew[i] = cur_rew
-            if i%201==0 or i==num_samples-1:
+            if i%501==0 or i==num_samples-1:
                 # plot_grid.plot_grid(8, 6, self.env.state_grid_map, i, map_sol)
                 # IPython.embed()
-                mean_constraints = np.mean(self.chain_cnstr[i-100:i,:],axis=0)
-                name = 'single_mean_cnstr_'
+                # mean_constraints = np.mean(self.chain_cnstr[i-100:i,:],axis=0)
+                mean_constraints = np.mean(self.chain_cnstr[i - int(np.floor((3/4*i))):i,:],axis=0)
+                name = 'single_mean_cnstr_' + str(N_demos) + '_'
                 plot_grid.plot_grid_mean_constr(self.env.num_rows, self.env.num_rows, self.env.state_grid_map, i, name, self.env.constraints, mean_constraints)#, trajectory_demos, optimal_policy)
             # TPR, FPR, FNR = FP_and_FN_and_TP(self.env_orig.constraints, map_constr)
             # Perf_list.append((i,TPR,FPR,FNR))

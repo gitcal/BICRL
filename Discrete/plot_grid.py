@@ -10,7 +10,7 @@ import seaborn as sns
 import pandas as pd
 
 
-def plot_grid(Nx, Ny, state_grid_map, kk, constraints=None, trajectories=None,  optimal_policy=None):
+def plot_grid(Nx, Ny, state_grid_map, kk, N_demos, constraints=None, trajectories=None,  optimal_policy=None):
     """
     Plots the skeleton of the grid world
     :param ax:
@@ -96,9 +96,9 @@ def plot_grid(Nx, Ny, state_grid_map, kk, constraints=None, trajectories=None,  
     # ax.set_xlabel('x')
     # ax.set_ylabel('y')
     ax.grid(False)
-    # plt.savefig('plots/MAP' + str(kk) + '.png')
+    plt.savefig('plots/original_and_traj_' + str(N_demos) + '_' + str(kk) + '.png')
 
-    plt.show()
+    # plt.show()
 
     # return ax
 
@@ -267,7 +267,7 @@ def plot_grid_mean_constr(Nx, Ny, state_grid_map, kk=0, name='random', constrain
     # ax.set_ylabel('y')
     # plt.colorbar()
     ax.grid(False)
-    plt.savefig('plots/'+ name + str(kk) + '.png')
+    plt.savefig('plots/' + name + str(kk) + '.png')
     # plt.show()
 
 

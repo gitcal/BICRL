@@ -10,7 +10,7 @@ import seaborn as sns
 import pandas as pd
 
 
-def plot_grid(Nx, Ny, state_grid_map, kk, constraints=None, trajectories=None,  optimal_policy=None):
+def plot_grid(Nx, Ny, state_grid_map, kk, N_demos, constraints=None, trajectories=None,  optimal_policy=None):
     """
     Plots the skeleton of the grid world
     :param ax:
@@ -53,7 +53,7 @@ def plot_grid(Nx, Ny, state_grid_map, kk, constraints=None, trajectories=None,  
                     ax.arrow(x - tup[0], y - tup[1], tup[0], tup[1], head_width=0.15, head_length=0.2, fc='k', ec='k')
                     cnt += 1
 
-    ax.plot(0,0,'x',color='green', markersize=15, markeredgewidth=5)
+    # ax.plot(0,0,'x',color='green', markersize=15, markeredgewidth=5)
 
 
 
@@ -64,11 +64,11 @@ def plot_grid(Nx, Ny, state_grid_map, kk, constraints=None, trajectories=None,  
 
     # data = np.zeros((Ny, Nx)) 
     if trajectories != None:
-        for i in trajectories:
-           
+        for i in trajectories:           
             cnstr = state_grid_map[i[0]]
             data[Ny - 1 - cnstr[1], cnstr[0]] += 1
             # data[cnstr[0], cnstr[1]] = 10
+
     for ind in np.nonzero(constraints)[0]:
         cnstr = state_grid_map[ind]
         data[Ny - 1 - cnstr[1], cnstr[0]] = 0
@@ -96,9 +96,9 @@ def plot_grid(Nx, Ny, state_grid_map, kk, constraints=None, trajectories=None,  
     # ax.set_xlabel('x')
     # ax.set_ylabel('y')
     ax.grid(False)
-    # plt.savefig('plots/MAP' + str(kk) + '.png')
+    plt.savefig('plots/original_and_traj_' + str(N_demos) + '_' + str(kk) + '.png')
 
-    plt.show()
+    # plt.show()
 
     # return ax
 

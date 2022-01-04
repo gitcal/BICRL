@@ -8,221 +8,167 @@ import numpy as np
 
 if __name__ == "__main__":
 
-    nx = 8 # columns
-    ny = 6 # rows
+    nx = 24 # columns
+    ny = 24 # rows
     gamma = 0.95
     noise = 0.1
     print("create a random ny x nx gridworld with no featurized reward function")
-    terminal_states = [0]#[rows * columns - 1]
-    # rewards negative everywhere except for the goal state
-    rewards = - np.ones(ny * nx)
-    rewards[0] = 2.0
+    
     # rewards[5] = - 1000
     # rewards[6] = - 1000
     # rewards[7] = - 1000
     # constraints is a binary vector indicating hte presence or not of a constraint
     constraints = np.zeros(ny * nx)
+    rewards = - np.ones(ny * nx)
     # set some constrains by hand
-    constraints[[16, 17, 24, 25, 23, 31]] = 1
-    rewards[[16, 17, 24, 25, 23, 31]] = -10
-    num_cnstr = len(np.nonzero(constraints)[0])
+    inds = [ 3, 4, 5, nx +3, nx+4,nx+5, 3*nx+int(np.floor(3*ny/4)),3*nx+int(np.floor(3*ny/4))+1,3*nx+int(np.floor(3*ny/4))+2,
+    4*nx+int(np.floor(3*ny/4)),4*nx+int(np.floor(3*ny/4))+1,4*nx+int(np.floor(3*ny/4))+2,
+    4*nx,4*nx+1,5*nx,5*nx+1,6*nx+int(np.floor(2*ny/4)),7*nx+int(np.floor(2*ny/4))-1,7*nx+int(np.floor(2*ny/4)),7*nx+int(np.floor(2*ny/4))+1,
+    8*nx+int(np.floor(2*ny/4)),(int(np.floor(4*nx/5))-1)*nx+int(np.floor(4*ny/5)),(int(np.floor(4*nx/5))-1)*nx+int(np.floor(4*ny/5))+1,
+    (int(np.floor(4*nx/5)))*nx+int(np.floor(4*ny/5))+1,
+    (int(np.floor(4*nx/5))+1)*nx+int(np.floor(4*ny/5))+1,(int(np.floor(4*nx/5))+2)*nx+int(np.floor(4*ny/5))+1,
+    (int(np.floor(4*nx/5))+2)*nx+int(np.floor(4*ny/5)),
+    int(np.floor(3*nx/4))*nx+int(np.floor(1*ny/5))-1,int(np.floor(3*nx/4))*nx+int(np.floor(1*ny/5)),int(np.floor(3*nx/4))*nx+int(np.floor(1*ny/5))+1,
+    (int(np.floor(3*nx/4))+1)*nx+int(np.floor(1*ny/5))-1,(int(np.floor(3*nx/4))+1)*nx+int(np.floor(1*ny/5)),(int(np.floor(3*nx/4))+1)*nx+int(np.floor(1*ny/5))+1,
+    (int(np.floor(3*nx/4))+2)*nx+int(np.floor(1*ny/5)), (int(np.floor(5*nx/8))+1)*nx+int(np.floor(5*ny/8))+2,
+    (int(np.floor(5*nx/8))+1)*nx+int(np.floor(5*ny/8))+1,(int(np.floor(5*nx/8))+2)*nx+int(np.floor(5*ny/8))+1,
+    (int(np.floor(5*nx/8))+3)*nx+int(np.floor(5*ny/8))+1,(int(np.floor(5*nx/8))+4)*nx+int(np.floor(5*ny/8))+1,
+    (int(np.floor(5*nx/8))+5)*nx+int(np.floor(5*ny/8))+1,
+    (int(np.floor(5*nx/8))+5)*nx+int(np.floor(5*ny/8))+2]
 
-    env2 = mdp_worlds.nonrand_gridworld(ny, nx, terminal_states, rewards, constraints, gamma, noise)
-    # np.save('../birl-v2/original', env2.transitions)
+    constraints[inds] = 1
     
-    # IPython.embed()
+
+    rewards[inds] = -10
+
+    num_cnstr = len(np.nonzero(constraints)[0])
+         
+    env2 = mdp_worlds.nonrand_gridworld(ny, nx, [], rewards, constraints, gamma, noise)
+    # np.save('../birl-v2/original', env2.transitions)
+    constraints_array = np.zeros((nx, ny))
+
+    for i in inds:
+        temp = env2.state_grid_map[i]
+        constraints_array[ny - 1 - temp[1], temp[0]] = 1
+    # IPython.embed()   
     #visualize rewards
     # print("random rewards")
     # mdp_utils.print_array_as_grid(env2.rewards, env2)
     # print("optimal policy for random grid world")
     # mdp_utils.visualize_policy(mdp_utils.get_optimal_policy(env2), env2)
-    optimal_policy = mdp_utils.get_optimal_policy(env2)
+    # optimal_policy = mdp_utils.get_optimal_policy(env2)
     # plot_grid.plot_grid(nx, ny, env2.state_grid_map, constraints, optimal_policy)
-    bottom_right_corner = ny * nx - 1
     trajectory_demos = []
     boltz_beta = 1
-    env_orig = copy.deepcopy(env2)
+    # env_orig = copy.deepcopy(env2)
     perf_lists = []
     trajectory_demos = []
-    for i in range(4):
-        # trajectory_demos.append(mdp_utils.generate_optimal_demo(env2, bottom_left_corner))
-        trajectory_demos.append(mdp_utils.generate_boltzman_demo(env2, boltz_beta, bottom_right_corner))
-    trajectory_demos = [item for sublist in trajectory_demos for item in sublist]
-    print(trajectory_demos)
-    for kk in range(40):
+    nx_temp = int(nx/2)
+    ny_temp = int(ny/2)
+    # list_inds = [list(range(nx_temp)), list(range(nx_temp, nx)), 
+    # list(range(nx * nx_temp, nx * nx_temp + nx_temp)), list(range(nx * nx_temp + nx_temp,nx * (nx_temp + 1)))]
+    list_inds = [(0,0),(0,nx_temp),(ny_temp,0), (ny_temp, nx_temp)]
+    terminal_states = [0, nx_temp -1, nx_temp * ny_temp - 1, 0]#[rows * columns - 1]
+    start_states = [nx_temp * ny_temp - 1, nx_temp * (ny_temp - 1), 0, nx_temp * ny_temp - 1]
 
-        print('Iteration {}'.format(kk))
+    mean_penalty_list = []
+    
+    for N_demos in [20, 50, 100, 200]:
+
+        for hier in range(4):
+        
+            print('Now running {} and {}'.format(N_demos, hier))
+
+            rewards_temp = - np.ones(ny_temp * nx_temp)
+            # rewards negative everywhere except for the goal state
+            rewards_temp[terminal_states[hier]] = 2.0
+            # IPython.embed()
+            constraints_temp = constraints_array[list_inds[hier][0]:list_inds[hier][0] + ny_temp, list_inds[hier][1]:list_inds[hier][1] + nx_temp]
+            inds_temp = np.nonzero(constraints_temp.flatten())
+            constraints_temp = np.zeros(ny_temp * nx_temp)
+            constraints_temp[inds_temp] = 1
+
+
+            rewards_temp[inds_temp] = -10
+            env2 = mdp_worlds.nonrand_gridworld(ny_temp, nx_temp, [terminal_states[hier]], rewards_temp, constraints_temp, gamma, noise)
+            # np.save('../birl-v2/original', env2.transitions)
+            
+            
+            optimal_policy = mdp_utils.get_optimal_policy(env2)
+            # plot_grid.plot_grid(nx, ny, env2.state_grid_map, constraints, optimal_policy)
+            bottom_right_corner = start_states[hier]
+            boltz_beta = 1
+            env_orig = copy.deepcopy(env2)
+            perf_lists = []
+            trajectory_demos = []
+
+
+            
+            for i in range(N_demos):
+                # trajectory_demos.append(mdp_utils.generate_optimal_demo(env2, bottom_left_corner))
+                trajectory_demos.append(mdp_utils.generate_boltzman_demo(env2, boltz_beta, bottom_right_corner))
+            trajectory_demos = [item for sublist in trajectory_demos for item in sublist]
+
+
+
+
+            # IPython.embed()
+
+            plot_grid.plot_grid(nx_temp, ny_temp, env2.state_grid_map, hier, N_demos, constraints_temp, trajectory_demos)
+            # IPython.embed()
+            for kk in range(1):
+
+                print('Iteration {}'.format(kk))
+               
+                print("Running Bayesian IRL with full optimal policy as demo")
+                demos = mdp_utils.demonstrate_entire_optimal_policy(env2)
+               
+                rewards_fix = - np.ones(ny_temp * nx_temp)
+                rewards_fix[terminal_states[hier]] = 2.0
+                # birl.run_mcmc_bern(num_steps, 0.5, rewards_fix)
+                # map_constr, map_rew = birl.get_map_solution()
+                constraints_map = np.zeros(ny * nx)
+                
+
+                # constraints[[16, 17, 24, 25, 23, 31]] = 1
+              
+                birl = bayesian_irl.BIRL(env2, trajectory_demos, boltz_beta, env_orig)
+
+                num_steps = 4000
+                step_stdev = 0.1
+               
+                birl.run_mcmc_bern_constraint(num_steps, 0.5, rewards_fix, hier, N_demos)
+
+                # plot_grid.plot_performance(birl.Perf_list)
+                map_constraints = birl.get_map_solution()
+                constraints_map = np.zeros(ny * nx)
+              
+                acc_rate = birl.accept_rate
+                mean_constraints, mean_penalty = birl.get_mean_solution(burn_frac=0.2, skip_rate=1)
+                # print("mean constraints", mean_constraints)
+                map_constraints, map_rew = birl.get_map_solution()
+                
+                np.savetxt('plots/penalty_rew_' + str(N_demos) + '_' + str(hier) + '.txt', birl.chain_rew)
+                # IPython.embed()
+                temp_query_state = birl.compute_variance(birl.posterior, 0.1)
+                # temp_query_state = np.random.randint(nx * ny)
+                print(temp_query_state)
+
+                mean_penalty_list.append(mean_penalty)
+                np.savetxt('plots/mean_constraints_hier_' + str(N_demos) + '_' + str(hier) + '.txt', mean_constraints)
+                np.savetxt('plots/map_constraints_hier_' + str(N_demos) + '_' + str(hier) + '.txt', map_constraints)
+                # IPython.embed()
+                # if query_state != None:
+                #     temp_query_state = list(birl.env.state_grid_map.keys())[list(birl.env.state_grid_map.values()).index(query_state)]
+                # print('******',temp_query_state,'*****')
+                # if temp_query_state != None:# and temp_query_state != 0 and temp_query_state not in env_orig.constraints:
+                #     # temp_query_state = list(self.env.state_grid_map.keys())[list(self.env.state_grid_map.values()).index(query_state)]
+                
+                # for _ in range(8):
+                #     traj = mdp_utils.generate_boltzman_demo(env_orig, boltz_beta, temp_query_state)
+                #     query_state_action = traj[0]
+                #     trajectory_demos.append(query_state_action)
+            # perf_lists.append(birl.Perf_list)
+        np.savetxt('plots/mean_reward_penalty_hier_' + str(N_demos) + '.txt', np.array(mean_penalty_list))
+    IPython.embed()
        
-        print("Running Bayesian IRL with full optimal policy as demo")
-        demos = mdp_utils.demonstrate_entire_optimal_policy(env2)
-       
-        rewards_fix = - np.ones(ny * nx)
-        rewards_fix[0] = 2.0
-        # birl.run_mcmc_bern(num_steps, 0.5, rewards_fix)
-        # map_constr, map_rew = birl.get_map_solution()
-        constraints_map = np.zeros(ny * nx)
-        
-
-        constraints[[16, 17, 24, 25, 23, 31]] = 1
-      
-        birl = bayesian_irl.BIRL(env2, trajectory_demos, boltz_beta, env_orig)
-
-        num_steps = 4000
-        step_stdev = 0.1
-       
-        birl.run_mcmc_bern_constraint(num_steps, 0.5, rewards_fix)
-
-        # plot_grid.plot_performance(birl.Perf_list)
-        map_constraints = birl.get_map_solution()
-        constraints_map = np.zeros(ny * nx)
-      
-        acc_rate = birl.accept_rate
-        # constraints[[16, 17, 24, 25, 23, 31]] = 1
-        mean_cnstr = birl.get_mean_solution(burn_frac=0.1, skip_rate=1)
-        # plot_grid.plot_posterior(nx, ny, mean_cnstr, kk, constraints, True, env2.state_grid_map)
-        # print("map constraints", map_constraints)
-        mean_constraints, mean_penalty = birl.get_mean_solution(burn_frac=0.2, skip_rate=1)
-        # print("mean constraints", mean_constraints)
-        map_sol, map_rew = birl.get_map_solution()
-        
-
-        # IPython.embed()
-        plot_grid.plot_grid_mean_constr(nx, ny, env2.state_grid_map, kk, constraints, mean_constraints, trajectory_demos, optimal_policy)
-        
-        # plot_grid.plot_grid_temp2(nx, ny, env2.state_grid_map, constraints_plot, constraints_map, trajectory_demos, optimal_policy, kk)
-        np.savetxt('plots/penalty_rew' + str(kk) + '.txt', birl.chain_rew)
-        # IPython.embed()
-        temp_query_state = birl.compute_variance(birl.posterior, 0.1)
-        # temp_query_state = np.random.randint(nx * ny)
-        print(temp_query_state)
-        # IPython.embed()
-        # if query_state != None:
-        #     temp_query_state = list(birl.env.state_grid_map.keys())[list(birl.env.state_grid_map.values()).index(query_state)]
-        # print('******',temp_query_state,'*****')
-        # if temp_query_state != None:# and temp_query_state != 0 and temp_query_state not in env_orig.constraints:
-        #     # temp_query_state = list(self.env.state_grid_map.keys())[list(self.env.state_grid_map.values()).index(query_state)]
-        
-        for _ in range(8):
-            traj = mdp_utils.generate_boltzman_demo(env_orig, boltz_beta, temp_query_state)
-            query_state_action = traj[0]
-            trajectory_demos.append(query_state_action)
-        # perf_lists.append(birl.Perf_list)
-
-    # temp_perf_list = []
-    # for i in range(len(perf_lists[0])):
-    #     tempTPR = 0
-    #     tempFPR = 0
-    #     tempFNR = 0
-
-    #     for j in range(len(perf_lists)):
-    #         #                                                               IPython.embed()
-    #         tempTPR += perf_lists[j][i][1]
-    #         tempFPR += perf_lists[j][i][2]
-    #         tempFNR += perf_lists[j][i][3]
-
-
-    #     temp_perf_list.append((i,tempTPR/len(perf_lists),tempFPR/len(perf_lists),tempFNR/len(perf_lists)))
-
-    # plot_grid.plot_grid_mean_constr(Nx, Ny, state_grid_map, kk=0, constraints_plot=None, mean_constraints=None, trajectories=None,  optimal_policy=None):
-
-
-
-
-# #-----------------------------------    
-#     print()
-#     print("create simple featurized mdp")
-#     env = mdp_worlds.gen_simple_world()
-#     #get optimal policy 
-#     opt_pi = mdp_utils.get_optimal_policy(env)
-#     #text-based visualization of optimal policy
-#     print("optimal policy for featurized grid world") 
-#     mdp_utils.visualize_policy(opt_pi, env)
-
-
-# #-----------------------------------
-#     print()
-#     print("generate a demonstration starting from top right state (states are numbered 0 through num_states")
-#     opt_traj = mdp_utils.generate_optimal_demo(env, 2)
-#     print("optimal trajectory starting from state 2")
-#     print(opt_traj)
-#     #format with arrows
-#     mdp_utils.visualize_trajectory(opt_traj, env)
-
-# #-----------------------------------
-#     print()
-#     print("Bayesian IRL")
-#     #give an entire policy as a demonstration to Bayesian IRL (best case scenario, jjst to test that BIRL works)
-#     print("Running Bayesian IRL with full optimal policy as demo")
-#     demos = mdp_utils.demonstrate_entire_optimal_policy(env)
-#     print(demos)
-#     beta = 10.0 #assume near optimal demonstrator
-#     birl = bayesian_irl.BIRL(env, demos, beta)
-#     num_steps = 2000
-#     step_stdev = 0.1
-#     birl.run_mcmc(num_steps, step_stdev)
-#     map_reward = birl.get_map_solution()
-#     print("map reward", map_reward)
-#     mean_reward = birl.get_mean_solution(burn_frac=0.1,skip_rate=2)
-#     print("mean reward", mean_reward)
-
-#     # visualize the optimal policy for the learned reward function
-#     env_learned = copy.deepcopy(env)
-#     env_learned.set_rewards(map_reward)
-#     learned_pi = mdp_utils.get_optimal_policy(env_learned)
-#     #text-based visualization of optimal policy
-#     print("Learned policy from Bayesian IRL using MAP reward") 
-#     mdp_utils.visualize_policy(learned_pi, env_learned)
-#     print("accept rate for MCMC", birl.accept_rate) #good to tune number of samples and stepsize to have this around 50%
-#     #we could also implement an adaptive step MCMC but this vanilla version shoudl suffice for now
-
-#     #-----------------------------------
-#     print()
-#     ## Quantitative metrics
-#     print("policy loss", mdp_utils.calculate_expected_value_difference(learned_pi, env))
-#     print("policy action accuracy {}%".format(mdp_utils.calculate_percentage_optimal_actions(learned_pi, env) * 100))
-
-
-#     #-----------------------------------
-#     print()
-#     ## Bayesian IRL with a demonstration purposely chosen to not be super informative
-#     print("running Bayesian IRL with the following demo")
-#     opt_traj = mdp_utils.generate_optimal_demo(env, 7)
-#     print("optimal trajectory starting from state 7")
-#     print(opt_traj)
-#     #format with arrows
-#     mdp_utils.visualize_trajectory(opt_traj, env)
-
-
-#     birl = bayesian_irl.BIRL(env, opt_traj, beta)
-#     num_steps = 2000
-#     step_stdev = 0.1
-#     birl.run_mcmc(num_steps, step_stdev)
-#     map_reward = birl.get_map_solution()
-#     print("map reward", map_reward)
-#     mean_reward = birl.get_mean_solution(burn_frac=0.1,skip_rate=2)
-#     print("mean reward", mean_reward)
-
-#     # visualize the optimal policy for the learned reward function
-#     env_learned = copy.deepcopy(env)
-#     env_learned.set_rewards(map_reward)
-#     learned_pi = mdp_utils.get_optimal_policy(env_learned)
-#     #text-based visualization of optimal policy
-#     print("Learned policy from Bayesian IRL using MAP reward") 
-#     mdp_utils.visualize_policy(learned_pi, env_learned)
-#     print("accept rate for MCMC", birl.accept_rate) #good to tune number of samples and stepsize to have this around 50%
-#     #we could also implement an adaptive step MCMC but this vanilla version shoudl suffice for now
-
-#     #-----------------------------------
-#     print()
-#     ## Quantitative metrics
-#     print("policy loss", mdp_utils.calculate_expected_value_difference(learned_pi, env))
-#     print("policy action accuracy {}%".format(mdp_utils.calculate_percentage_optimal_actions(learned_pi, env) * 100))
-
-#     #demo isn't super informative so it doesn't learn the true optimal policy but does learn that the red feature is probably negative
-#     # and likely worse than the white feature
-
-#     print("learned weights", map_reward)
-#     print("true weights", env.feature_weights)
-
-
-

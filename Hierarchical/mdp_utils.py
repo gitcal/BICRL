@@ -269,7 +269,7 @@ def generate_boltzman_demo(env, beta, start_state):
     :return:
     """
     current_state = start_state
-    max_traj = env.num_states // 2  #this should be sufficiently long, maybe too long...
+    max_traj = env.num_states# // 2  #this should be sufficiently long, maybe too long...
     boltzman_rational_trajectory = []
     q_values = calculate_q_values(env)
 

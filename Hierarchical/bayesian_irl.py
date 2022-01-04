@@ -28,7 +28,7 @@ class BIRL:
             self.num_mcmc_dims = len(self.env.feature_weights)
         else:
             self.num_mcmc_dims = self.env.num_states
-        np.random.seed(10)
+        # np.random.seed(10)
 
         
 
@@ -65,6 +65,7 @@ class BIRL:
 
 
     def generate_proposal_bern_constr_alternating(self, old_constr, old_rew, step_size, ind = 0, stdev = 1):
+        # stepsize not used in this implementation
         new_constr = copy.deepcopy(old_constr)
         new_rew = copy.deepcopy(old_rew)
         if ind % 50 == 0:   
@@ -74,11 +75,6 @@ class BIRL:
             index = np.random.randint(len(old_constr))
             new_constr[index] = 1 if old_constr[index]==0 else 0
             
-        
-        
-        # new_rew_mean = new_rew_mean - 1 if np.random.rand() < 0.5 else new_rew_mean + 1
-        # new_rew = np.random.normal(new_rew_mean, 1)
-        
         return new_constr, new_rew, index
 
 
@@ -139,14 +135,14 @@ class BIRL:
     def initial_solution_bern_cnstr(self):
         # initialize problem solution for MCMC to all zeros, maybe not best initialization but it works in most cases
         new_constr = np.zeros(self.env.num_states)
-        new_rew = np.random.randint(-20,-5)
+        new_rew = np.random.randint(-30,-10)
         for i in range(len(new_constr)):
             new_constr[i] = bernoulli.rvs(0.5)
         return new_constr, new_rew
 
   
         
-    def run_mcmc_bern_constraint(self, samples, stepsize, rewards_fix, normalize=True):
+    def run_mcmc_bern_constraint(self, samples, stepsize, rewards_fix, hier, N_demos, normalize=True):
         '''
             run metropolis hastings MCMC with Gaussian symmetric proposal and uniform prior
             samples: how many reward functions to sample from posterior
@@ -172,8 +168,7 @@ class BIRL:
                     cur_sol[i] = cur_rew
 
 
-
-        
+        # IPython.embed()
         map_constr = cur_constr
         cur_ll = self.calc_ll(cur_sol)  # log likelihood
         #keep track of MAP loglikelihood and solution
@@ -192,7 +187,7 @@ class BIRL:
             for ii in range(len(prop_constr)):
                 if prop_constr[ii] == 1:
                     prop_sol[ii] = prop_rew
-
+            
             # IPython.embed()
             # print(prop_sol)
             # calculate likelihood ratio test
@@ -237,15 +232,15 @@ class BIRL:
                     if index != None:
                         self.posterior[index].append(1-prop_constr[index]) 
                     self.chain_rew[i] = cur_rew
-            if i%201==0 or i==num_samples-1:
+            if i%501==0 or i==num_samples-1:
                 # plot_grid.plot_grid(8, 6, self.env.state_grid_map, i, map_sol)
                 # IPython.embed()
-                mean_constraints = np.mean(self.chain_cnstr[i-100:i,:],axis=0)
-                name = 'single_mean_cnstr_'
+                mean_constraints = np.mean(self.chain_cnstr[i - int(np.floor((3/4*i))):i,:],axis=0)
+                name = 'hier_mean_cnstr_' + str(N_demos) + '_' + str(hier) + '_' 
                 plot_grid.plot_grid_mean_constr(self.env.num_rows, self.env.num_rows, self.env.state_grid_map, i, name, self.env.constraints, mean_constraints)#, trajectory_demos, optimal_policy)
             # TPR, FPR, FNR = FP_and_FN_and_TP(self.env_orig.constraints, map_constr)
             # Perf_list.append((i,TPR,FPR,FNR))
-
+        # IPython.embed()
         print("accept rate:", accept_cnt / num_samples)
         self.accept_rate = accept_cnt / num_samples
         self.map_sol = map_sol
