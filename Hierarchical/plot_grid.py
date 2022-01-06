@@ -96,9 +96,9 @@ def plot_grid(Nx, Ny, state_grid_map, kk, N_demos, constraints=None, trajectorie
     # ax.set_xlabel('x')
     # ax.set_ylabel('y')
     ax.grid(False)
-    plt.savefig('plots/original_and_traj_' + str(N_demos) + '_' + str(kk) + '.png')
+    # plt.savefig('plots/original_and_traj_' + str(N_demos) + '_' + str(kk) + '.png')
 
-    # plt.show()
+    plt.show()
 
     # return ax
 
