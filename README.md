@@ -1,4 +1,10 @@
-# BIRLC
+# Summary of BICRL
+
+
+
+
+# 
+
 
 
 
@@ -7,6 +13,9 @@
 
 
 # References
+
+If you find this paper interesting and relevant to your work you car refer to it as follows:\
+
 @article{anonymous2022bayesian,\
 title={Bayesian Methods for Constraint Inference in Reinforcement Learning},\
 author={Anonymous},\
