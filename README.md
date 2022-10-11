@@ -4,11 +4,16 @@ _Bayesian Inverse Constraint Reinforcement Learning_ (BICRL) is a novel approach
 
 
 # Requirements
-
+The code was written in Python >=3.6 \
+To install the requirements: \
+pip install -r requirements.txt
 
 # Contents
 
+## 
+## Hierarchical
 
+## Feature
 
 
 
