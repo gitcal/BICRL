@@ -1,5 +1,5 @@
 # Summary of BICRL
-
+_Bayesian Inverse Constraint Reinforcement Learning_ (BICRL) is a novel approach that infers a posterior probability distribution over constraints from demonstrated trajectories. The main advantages of BICRL, compared to prior constraint inference algorithms, are (1) the freedom to infer constraints from partial trajectories and even from disjoint state-action pairs, (2) the ability to infer constraints from suboptimal demonstrations and in stochastic environments, and (3) the opportunity to use the posterior distribution over constraints in order to implement active learning and robust policy optimization techniques.
 
 
 
