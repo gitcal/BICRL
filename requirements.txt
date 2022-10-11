@@ -1,0 +1,6 @@
+IPython
+numpy
+matplotlib
+pandas
+pickle
+seaborn
