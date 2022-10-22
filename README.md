@@ -10,7 +10,6 @@ pip install -r requirements.txt
 
 # Contents
 
-## Discrete
 
 ## Hierarchical
 
