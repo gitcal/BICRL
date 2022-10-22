@@ -19,7 +19,7 @@ pip install -r requirements.txt
 
 ## Rationality-Discrepancy
 
-## 
+## Human demonstrations
 
 
 # References
