@@ -23,7 +23,7 @@ pip install -r requirements.txt
 
 # References
 
-If you find this paper interesting and relevant to your work you car cite it as follows:
+If you find this paper interesting and relevant to your work you can cite it as follows:
 
 @article{papadimitriou2022bayesian,\
 title={Bayesian Methods for Constraint Inference in Reinforcement Learning},\
